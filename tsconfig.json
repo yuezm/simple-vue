@@ -1,0 +1,35 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "esnext",
+    "sourceMap": true,
+    "outDir": "./dist",
+    "baseUrl": "./",
+    "incremental": true,
+    "alwaysStrict": true,
+    "lib": [
+      "esnext",
+      "dom",
+      "dom.iterable"
+    ],
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "@Lib": [
+        "./lib/*"
+      ],
+      "@Types/*": [
+        "./typings/*"
+      ]
+    }
+  },
+  "include": [
+    "./src",
+    "./typings"
+  ]
+}
