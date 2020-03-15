@@ -1,7 +1,7 @@
 import { Deps } from './deps';
 import { isObject, isEmpty } from '../helper';
 
-const ARRAY_HACK_METHODS = [ 'push', 'pop', 'shift', 'unshift', 'splice', 'sort' ];
+const ARRAY_HACK_METHODS = [ 'push', 'pop', 'shift', 'unshift', 'splice', 'sort', 'reverse' ];
 
 export interface IObserverData {
   __ob__?: Observer;
@@ -19,7 +19,6 @@ function walk(data: IObserverData): void {
 function observeArrayHack(arr: IObserverData) {
   const newArrayProto = Object.create(Array.prototype);
   const arrayPrototype = Array.prototype as Array<any>;
-
   for (const key of ARRAY_HACK_METHODS) {
     newArrayProto[ key ] = function(...args: any[]) {
       (arrayPrototype[ (key as any) ] as Function).call(arr, ...args);
@@ -31,10 +30,10 @@ function observeArrayHack(arr: IObserverData) {
       if (key === 'splice') {
         observe(args[ 2 ]);
       }
-
       (arr.__ob__ as Observer).deps.notify();
     };
   }
+  Object.setPrototypeOf(arr, newArrayProto);
 }
 
 function defineReactive(target: IObserverData, key: string, value?: any): void {
@@ -59,7 +58,7 @@ function defineReactive(target: IObserverData, key: string, value?: any): void {
         }
       }
 
-      return isEmpty(getter) ? value : (getter as Function).call(target);
+      return isEmpty(getter) ? _value : (getter as Function).call(target);
     },
     set(v: any): void {
       if (v === _value || (Number.isNaN(v) && Number.isNaN(_value))) {
@@ -71,7 +70,6 @@ function defineReactive(target: IObserverData, key: string, value?: any): void {
       } else {
         (setter as Function).call(target, v);
       }
-
       observe(v);
       _deps.notify();
     },
@@ -79,7 +77,7 @@ function defineReactive(target: IObserverData, key: string, value?: any): void {
 }
 
 export function observe(data: IObserverData): Observer | undefined {
-  if (!isObject(data) || Array.isArray(data)) {
+  if (!isObject(data)) {
     return;
   }
 
@@ -87,17 +85,21 @@ export function observe(data: IObserverData): Observer | undefined {
     return data.__ob__;
   }
 
-  const ob = new Observer(data);
-  return ob.__ob__;
+  return new Observer(data);
 }
 
 export class Observer {
   deps: Deps = new Deps();
-  __ob__: Observer;
   value: IObserverData;
 
   constructor(data: IObserverData) {
-    this.__ob__ = this;
+    Object.defineProperty(data, '__ob__', {
+      enumerable: false,
+      writable: true,
+      configurable: true,
+      value: this,
+    });
+
     this.value = data;
 
     if (Array.isArray(data)) {

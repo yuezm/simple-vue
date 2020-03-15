@@ -1,12 +1,13 @@
 import { Deps } from './deps';
 import { Vue } from '@/main';
-import { getValueFromMultiKeys, isEmpty } from '../helper';
+import { isEmpty, parsePathsToFunction } from '../helper';
+import { update } from '@/vdom';
 
 let watcherId: number = 0;
 
 export interface IWatcherOptions {
   lazy?: boolean;
-  key: string;
+  key: string | Function;
   vm: Vue;
 }
 
@@ -14,21 +15,22 @@ export class Watcher {
   id: number = ++watcherId;
   value: any;
   vm: Vue;
-  key: string;
+  getter: Function;
   lazy: boolean = false;
   dirty: boolean = true;
   hasJoinDepsIdSet: Set<number> = new Set<number>();
 
   constructor(options: IWatcherOptions) {
     this.vm = options.vm;
-    this.key = options.key;
+    this.getter = typeof options.key === 'string' ? parsePathsToFunction(options.key) : options.key;
     this.lazy = isEmpty(options.lazy) ? false : (options.lazy as boolean);
+
     this.value = this.lazy ? undefined : this.getValue();
   }
 
   getValue() {
     Deps.SET_TARGET(this);
-    const v = getValueFromMultiKeys(this.vm, this.key);
+    const v = this.getter.call(this.vm, this.vm);
     Deps.REMOVE_TARGET();
     return v;
   }
@@ -54,5 +56,6 @@ export class Watcher {
       this.dirty = true;
     }
     // 干点啥
+    this.getValue();
   }
 }

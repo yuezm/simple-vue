@@ -1,4 +1,5 @@
 import { IObject } from '@Types/index';
+import { Vue } from '@/main';
 
 export function isFunction(data: any): boolean {
   return typeof data === 'function';
@@ -22,6 +23,12 @@ export function getValueFromMultiKeys(target: IObject, key: string): any {
     target = target[ keys[ i ] ];
   }
   return target;
+}
+
+export function parsePathsToFunction(paths: string) {
+  return function(vm: Vue) {
+    return getValueFromMultiKeys(vm, paths);
+  };
 }
 
 

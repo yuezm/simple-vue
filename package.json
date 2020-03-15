@@ -1,0 +1,42 @@
+{
+  "name": "simple-vue",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "dependencies": {
+    "eslint": "^6.8.0",
+    "jest": "^25.1.0",
+    "prettier": "^1.19.1",
+    "ts-jest": "^25.2.1",
+    "webpack-cli": "^3.3.11",
+    "webpack": "^4.42.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.8.7",
+    "@babel/preset-env": "^7.8.7",
+    "babel-loader": "^8.0.6",
+    "html-webpack-plugin": "^3.2.0",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.8.3",
+    "webpack-dev-server": "^3.10.3"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "webpack": "webpack",
+    "dev": "webpack-dev-server"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yuezm/simple-vue.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/yuezm/simple-vue/issues"
+  },
+  "homepage": "https://github.com/yuezm/simple-vue#readme"
+}
