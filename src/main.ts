@@ -107,7 +107,7 @@ export class VueComponent extends Vue {
 const vm = new Vue({
   data: {
     name: 'Keven',
-    l: [ 'A', 'B', 'C' ],
+    l: [ 'C', 'A', 'B', 'E' ],
   },
   render(h: ICreateComponent) {
     const nodes = [];
@@ -121,5 +121,5 @@ vm.$mount('#app');
 
 
 setTimeout(() => {
-  (vm as any).l = [ 'B', 'D', 'A' ];
+  (vm as any).l = [ 'D', 'A', 'C', 'B' ];
 }, 1000);

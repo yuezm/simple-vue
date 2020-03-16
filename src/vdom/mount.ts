@@ -1,13 +1,13 @@
 import { TNodeType, ENType, VHtmlNode, VTextNode, VComponentNode, createElement } from './vnode';
 import { VueComponent } from '@/main';
 
-export function mount(ele: HTMLElement, vNode: TNodeType, refEle?: HTMLElement) {
+export function mount(ele: HTMLElement, vNode: TNodeType, isPre: boolean = false, refEle: HTMLElement = null) {
   if (vNode.nType & ENType.HTML_FLAG) {
-    mountElement(ele, vNode as VHtmlNode, refEle);
+    mountElement(ele, vNode as VHtmlNode, isPre, refEle);
   } else if (vNode.nType & ENType.TEXT_FLAG) {
     mountText(ele, vNode as VTextNode);
   } else if (vNode.nType & ENType.COMPONENT_FLAG) {
-    mountComponent(ele, vNode as VComponentNode, refEle);
+    mountComponent(ele, vNode as VComponentNode, isPre, refEle);
   }
   // 缺少svg 和 函数式组件
 }
@@ -21,18 +21,24 @@ export function mountChildren(ele: HTMLElement, vNodes?: TNodeType[]) {
 }
 
 // 挂载普通HTML标签
-export function mountElement(ele: HTMLElement, vNode: VHtmlNode, refEle?: HTMLElement) {
+export function mountElement(ele: HTMLElement, vNode: VHtmlNode, isPre: boolean = false, refEle: HTMLElement = null) {
   const targetElement: HTMLElement = document.createElement(vNode.tag as string);
   vNode.el = targetElement;
 
   mountData(targetElement, vNode);
   mountChildren(targetElement, vNode.children);
 
-  if (!refEle) {
-    ele.appendChild(targetElement);
+  if (isPre) {
+    ele.prepend(targetElement);
   } else {
-    ele.insertBefore(targetElement, refEle);
+    if (refEle) {
+      ele.insertBefore(targetElement, refEle);
+    } else {
+      ele.appendChild(targetElement);
+    }
   }
+
+
 }
 
 // 挂载文本
@@ -43,14 +49,14 @@ export function mountText(ele: HTMLElement, vNode: VTextNode) {
 }
 
 // 挂载有状态组件
-export function mountComponent(ele: HTMLElement, vNode: VComponentNode, refEle?: HTMLElement) {
+export function mountComponent(ele: HTMLElement, vNode: VComponentNode, isPre: boolean = false, refEle: HTMLElement = null) {
   const instance: VueComponent = new vNode.tag();
   instance.$vnode = instance.render.call(
     instance,
     createElement,
   ) as VComponentNode;
 
-  mount(ele, instance.$vnode, refEle);
+  mount(ele, instance.$vnode, isPre, refEle);
   instance.$el = vNode.el = instance.$vnode.el as HTMLElement;
 }
 
