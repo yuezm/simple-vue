@@ -85,7 +85,7 @@ export function patchChildren(oldNode: TNodeType, newNode: TNodeType) {
     }
     mountChildren(oldNode.el as HTMLElement, newNode.children);
     */
-    diffDoubleEnd(oldNode.el as HTMLElement, oldNode.children, newNode.children);
+    diffOpt(oldNode.el as HTMLElement, oldNode.children, newNode.children);
   }
 }
 
@@ -240,10 +240,131 @@ export function diffDoubleEnd(pEle: HTMLElement, oldChildren: TNodeType[], newCh
   }
 }
 
+export function diffOpt(pEle: HTMLElement, oldChildren: TNodeType[], newChildren: TNodeType[]) {
+  /**
+   * 优化diff算法
+   * 1. 取出相同前后缀
+   * 2. 寻找最大增增子序列
+   */
+
+  let s = 0;
+  let old_end = oldChildren.length - 1, new_end = newChildren.length - 1;
+
+  // 去除相同前缀
+  while (oldChildren[ s ].key === newChildren[ s ].key && s < oldChildren.length && s < newChildren.length) {
+    patch(pEle, oldChildren[ s ], newChildren[ s ]);
+    s++;
+  }
+
+  // 去除相同后缀
+  while (oldChildren[ old_end ].key === newChildren[ new_end ].key && old_end > s && new_end > s) {
+    patch(pEle, oldChildren[ old_end ], newChildren[ new_end ]);
+    old_end--;
+    new_end--;
+  }
+
+
+  const oldKeyMap: Map<string | number, number> = createChildrenKeyMap(oldChildren);
+  const newKeyMap: Map<string | number, number> = createChildrenKeyMap(newChildren);
+
+  if (old_end >= s) {
+    // 此时需要进行新节点存在判断
+    for (let i = s; i <= old_end; i++) {
+      if (!newKeyMap.has(oldChildren[ i ].key)) {
+        // 删除新节点中不存在的节点
+        pEle.removeChild(oldChildren[ i ].el);
+      }
+    }
+  }
+
+  if (new_end >= s) {
+    // 否则，寻找最大增资序列，进行DOM移动
+    const keys: number[] = [];
+    let leftMax = -1;
+    let move: boolean = false;
+
+    // 确定新节点，在老节点中的索引排序
+    for (let i = s; i <= new_end; i++) {
+      if (oldKeyMap.has(newChildren[ i ].key)) {
+        const oldIndex = oldKeyMap.get(newChildren[ i ].key);
+
+        newChildren[ i ].el = oldChildren[ oldIndex ].el;
+
+        keys.push(oldIndex);
+        if (oldIndex < leftMax && !move) move = true; // 如果出现非升序，则需要移动节点
+        leftMax = Math.max(oldIndex, leftMax);
+      } else {
+        keys.push(-1); // 插入-1仅是为了占位
+        // 全新节点，直接挂载
+        if (s === 0) {
+          mount(pEle, newChildren[ i ], true);
+        } else {
+          mount(pEle, newChildren[ i ], false, newChildren[ i - 1 ].el.nextSibling as HTMLElement);
+        }
+      }
+    }
+
+    if (move) {
+      const resultKeysSet: Set<number> = new Set<number>(findMaxAddStepKeys(keys)); // 在此处出现的key值对应的DOM节点，无序移动
+
+      // 开始移动DOM
+      for (let i = s; i < new_end; i++) {
+        const oldIndex = keys[ i - s ];
+
+        // 插入新节点
+        if (oldIndex === -1) {
+          continue;
+        }
+
+        // 属于增子序列，无序移动
+        if (resultKeysSet.has(oldIndex)) {
+          patch(pEle, oldChildren[ oldIndex ], newChildren[ i ]);
+          continue;
+        }
+
+        // 移动节点
+        newChildren[ i ].el = oldChildren[ oldIndex ].el;
+        pEle.insertBefore(newChildren[ i ].el, newChildren[ i - 1 ].el.nextSibling as HTMLElement);
+      }
+    }
+  }
+}
+
 export function createChildrenKeyMap(c: TNodeType[]): Map<string | number, number> {
   const map: Map<string | number, number> = new Map<string | number, number>();
   for (let i = 0; i < c.length; i++) {
     map.set(c[ i ].key, i);
   }
   return map;
+}
+
+export function findMaxAddStepKeys(keys: number[]): number[] {
+  // 最大增子序列算法 DP+二分
+  const resultKeys: number[] = [ keys[ 0 ] ];
+  let last = 0;
+
+  for (let i = 1; i < keys.length; i++) {
+    if (keys[ i ] > resultKeys[ last ]) {
+      resultKeys.push(keys[ i ]);
+      last++;
+    } else {
+      replaceKey(0, last, keys[ i ], resultKeys);
+    }
+  }
+
+  return resultKeys;
+}
+
+
+function replaceKey(start: number, end: number, v: number, res: number[]): void {
+  while (start <= end) {
+    const mid = (start + end) >> 1;
+
+    if (res[ mid ] > v) {
+      end = mid - 1;
+    } else {
+      start = mid + 1;
+    }
+  }
+  res[ start ] = v;
 }
