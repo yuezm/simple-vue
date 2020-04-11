@@ -1,7 +1,6 @@
 import { isEmpty, isFunction, proxyData } from './helper';
-import { observe } from './observe';
+import { Observer } from './observe';
 import {
-  ICreateComponent,
   TNodeType,
   VNode,
   createElement,
@@ -19,17 +18,14 @@ export interface IVueOptions {
   $root?: Vue;
 }
 
-export type VueComponentConstructor = typeof VueComponent;
 
 export class Vue {
-  public $options: IVueOptions;
-  public id: number = ++vueId;
-
-  public $parent: Vue;
-  public $root: Vue;
-
-  public $el: HTMLElement;
-  public $vnode: TNodeType;
+  id: number = ++vueId;
+  $el: HTMLElement;
+  $root: Vue;
+  $parent: Vue;
+  $options: IVueOptions;
+  $vnode: TNodeType;
 
   constructor(options?: IVueOptions) {
     options = isEmpty(options)
@@ -46,7 +42,7 @@ export class Vue {
     this.init();
   }
 
-  init() {
+  init(): void {
     this.initData();
 
     if (!isEmpty(this.$options.el)) {
@@ -54,7 +50,7 @@ export class Vue {
     }
   }
 
-  initData() {
+  initData(): void {
     const data = this.$options.data;
     const _data = isFunction(data)
       ? (data as Function).call(this)
@@ -62,33 +58,32 @@ export class Vue {
         ? {}
         : data;
     proxyData(this, _data);
-    observe(_data);
+    Observer.main(_data);
   }
 
-  render(h: ICreateComponent): TNodeType {
+  render(): TNodeType {
     console.warn('组件必须实现自身的render方法');
     return new VNode();
   }
 
-  $mount(el: string) {
+  $mount(el: string): void {
     const ele: HTMLElement = document.querySelector(el);
     this.$el = ele;
 
     if (ele.nodeName === 'body' || ele.nodeName === 'html') {
       console.warn('不允许使用根元素绑定');
     }
-    const render = this.$options.render;
 
+    const _render = this.$options.render;
     new Watcher({
-      key: (vm) => {
-        const vnode = render.call(vm, createElement);
-        this._update(vnode);
+      key: (vm): void => {
+        this._update(_render.call(vm, createElement));
       },
       vm: this,
     });
   }
 
-  _update(vnode: TNodeType) {
+  _update(vnode: TNodeType): void {
     const prevNode: TNodeType = this.$vnode;
     this.$vnode = vnode;
     update(this.$el, prevNode, vnode);
@@ -96,30 +91,11 @@ export class Vue {
 }
 
 export class VueComponent extends Vue {
-  protected isComponent: boolean = true;
+  protected isComponent = true;
 
   constructor(options?: IVueOptions) {
     super(options);
   }
 }
 
-
-const vm = new Vue({
-  data: {
-    name: 'Keven',
-    l: [ 'G', 'A', 'B', 'C' ],
-  },
-  render(h: ICreateComponent) {
-    const nodes = [];
-    for (const i of this.l) {
-      nodes.push(h('p', { key: i }, i.toString()));
-    }
-    return h('div', null, nodes);
-  },
-});
-vm.$mount('#app');
-
-
-setTimeout(() => {
-  (vm as any).l = [ 'D', 'A', 'B', 'C' ];
-}, 1000);
+export type VueComponentConstructor = typeof VueComponent;

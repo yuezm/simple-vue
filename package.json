@@ -8,26 +8,32 @@
     "test": "test"
   },
   "dependencies": {
-    "jest": "^25.1.0",
     "prettier": "^1.19.1",
-    "ts-jest": "^25.2.1",
-    "webpack-cli": "^3.3.11",
-    "webpack": "^4.42.0"
+    "webpack": "^4.42.0",
+    "webpack-cli": "^3.3.11"
   },
   "devDependencies": {
     "@babel/core": "^7.8.7",
     "@babel/preset-env": "^7.8.7",
+    "@types/jest": "^25.1.4",
+    "@types/node": "^10.17.19",
+    "@typescript-eslint/eslint-plugin": "^2.23.0",
+    "@typescript-eslint/parser": "^2.23.0",
     "babel-loader": "^8.0.6",
     "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.0",
+    "eslint-plugin-import": "^2.20.1",
+    "eslint-plugin-security": "^1.4.0",
     "html-webpack-plugin": "^3.2.0",
+    "jest": "^25.2.0",
+    "ts-jest": "^25.2.1",
     "ts-loader": "^6.2.1",
     "typescript": "^3.8.3",
     "webpack-dev-server": "^3.10.3"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "webpack": "webpack",
-    "dev": "webpack-dev-server"
+    "test": "jest",
+    "webpack": "webpack"
   },
   "repository": {
     "type": "git",
@@ -38,5 +44,25 @@
   "bugs": {
     "url": "https://github.com/yuezm/simple-vue/issues"
   },
-  "homepage": "https://github.com/yuezm/simple-vue#readme"
+  "homepage": "https://github.com/yuezm/simple-vue#readme",
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "ts"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)": "<rootDir>/src/$1",
+      "^@Lib/(.*)": "<rootDir>/lib/$1",
+      "^@Types/(.*)": "<rootDir>/typings/$1"
+    },
+    "testTimeout": 30000,
+    "rootDir": "./",
+    "testRegex": ".spec.ts$",
+    "transform": {
+      "^.+\\.(t|j)s$": "ts-jest"
+    },
+    "coverageDirectory": "../coverage",
+    "testEnvironment": "node"
+  }
 }

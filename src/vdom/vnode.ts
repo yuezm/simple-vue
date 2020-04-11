@@ -64,6 +64,10 @@ export class VNode {
           : ECType.SINGLE_CHILDREN;
     }
   }
+
+  static createEmptyNode(): VNode {
+    return new VNode();
+  }
 }
 
 export class VTextNode extends VNode {
@@ -79,6 +83,10 @@ export class VTextNode extends VNode {
     super();
     this.text = text;
   }
+
+  static createText(text: string): VTextNode {
+    return new VTextNode(text);
+  }
 }
 
 export class VHtmlNode extends VNode {
@@ -88,6 +96,10 @@ export class VHtmlNode extends VNode {
 
   constructor(tag: string, data?: IVNodeData, children?: VNode[]) {
     super(tag, data, children);
+  }
+
+  static createHtml(tag: string, data?: IVNodeData, children?: VNode[]): VHtmlNode {
+    return new VHtmlNode(tag, data, children);
   }
 }
 
@@ -99,6 +111,32 @@ export class VComponentNode extends VNode {
   constructor(tag: VueComponentConstructor, data?: IVNodeData, children?: VNode[]) {
     super(tag, data, children);
   }
+
+  static createComponent(tag: VueComponentConstructor, data?: IVNodeData, children?: VNode[]): VComponentNode {
+    return new VComponentNode(tag, data, children);
+  }
+}
+
+export function formatChildrenNode(t: string | VNode): VNode {
+  if (typeof t === 'string') {
+    return VTextNode.createText(t);
+  }
+  return t;
+}
+
+export function serializeChildren(children?: VNode | (VNode | string)[] | string): VNode[] | undefined {
+  if (isEmpty(children)) return;
+
+  if (Array.isArray(children)) {
+    const res = [];
+    for (let i = 0; i < children.length; i++) {
+      const cn = formatChildrenNode(children[ i ]);
+      if (!cn.key) cn.key = `KEY-${ i }`;
+      res.push(cn);
+    }
+    return res;
+  }
+  return [ formatChildrenNode(children) ];
 }
 
 export function createElement(tag?: string | VueComponentConstructor, data?: IVNodeData, children?: VNode[] | string): VNode {
@@ -106,44 +144,14 @@ export function createElement(tag?: string | VueComponentConstructor, data?: IVN
 
   // 认为是Component
   if (tag instanceof VueComponent) {
-    return createComponent(tag as VueComponentConstructor, data, cNodes);
+    return VComponentNode.createComponent(tag as VueComponentConstructor, data, cNodes);
   }
 
   // 认为是html标签
   if (typeof tag === 'string') {
-    return new VHtmlNode(tag, data, cNodes);
+    return VHtmlNode.createHtml(tag, data, cNodes);
   }
 
   // 认为是text
-  return cNodes && cNodes.length > 0 ? cNodes[ 0 ] : createEmptyNode();
-}
-
-export function createComponent(tag: VueComponentConstructor, data?: IVNodeData, children?: VNode[]): VNode {
-  return new VComponentNode(tag, data, children);
-}
-
-export function createEmptyNode() {
-  return new VNode();
-}
-
-function serializeChildren(children?: VNode | (VNode | string)[] | string): VNode[] | undefined {
-  if (isEmpty(children)) return;
-
-  if (Array.isArray(children)) {
-    const res = [];
-    for (let i = 0; i < children.length; i++) {
-      const cn = formatStringNode(children[ i ]);
-      if (!cn.key) cn.key = `KEY-${ i }`;
-      res.push(cn);
-    }
-    return res;
-  }
-  return [ formatStringNode(children) ];
-}
-
-function formatStringNode(t: string | VNode): VNode {
-  if (typeof t === 'string') {
-    return new VTextNode(t as string);
-  }
-  return t;
+  return cNodes && cNodes.length > 0 ? cNodes[ 0 ] : VNode.createEmptyNode();
 }

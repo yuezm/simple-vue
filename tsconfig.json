@@ -11,6 +11,10 @@
     "baseUrl": "./",
     "incremental": true,
     "alwaysStrict": true,
+    "types": [
+      "jest",
+      "node"
+    ],
     "lib": [
       "esnext",
       "dom",

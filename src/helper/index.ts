@@ -25,14 +25,12 @@ export function getValueFromMultiKeys(target: IObject, key: string): any {
   return target;
 }
 
-export function parsePathsToFunction(paths: string) {
-  return function(vm: Vue) {
-    return getValueFromMultiKeys(vm, paths);
-  };
+export function parsePathsToFunction(paths: string): (vm: Vue) => any {
+  return (vm: Vue): any => getValueFromMultiKeys(vm, paths);
 }
 
 
-export function proxyData(proxy: IObject, target: IObject) {
+export function proxyData(proxy: IObject, target: IObject): void {
   const keys = Object.keys(target);
   for (const key of keys) {
     Object.defineProperty(proxy, key, {
